@@ -2,9 +2,9 @@ FROM debian:stretch as builder
 
 # Fluent Bit version
 ENV FLB_MAJOR 1
-ENV FLB_MINOR 1
-ENV FLB_PATCH 0
-ENV FLB_VERSION 1.1.0
+ENV FLB_MINOR 0
+ENV FLB_PATCH 4
+ENV FLB_VERSION 1.0.4
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -51,23 +51,16 @@ COPY conf/fluent-bit.conf \
      conf/plugins.conf \
      /fluent-bit/etc/
 
-FROM gcr.io/distroless/cc
-MAINTAINER Eduardo Silva <eduardo@treasure-data.com>
+FROM debian:stretch
 LABEL Description="Fluent Bit docker image" Vendor="Fluent Organization" Version="1.1"
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/*sasl* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libz* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/libz* /lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libssl.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libcrypto.so* /usr/lib/x86_64-linux-gnu/
-# These below are all needed for systemd
-COPY --from=builder /lib/x86_64-linux-gnu/libsystemd* /lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/libselinux.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/liblzma.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/liblz4.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/libgcrypt.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/libpcre.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /lib/x86_64-linux-gnu/libgpg-error.so* /lib/x86_64-linux-gnu/
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && \
+   apt-get install -y --no-install-recommends \
+   libssl1.0-dev \
+   libsasl2-dev \
+   ca-certificates
 
 COPY --from=builder /fluent-bit /fluent-bit
 
